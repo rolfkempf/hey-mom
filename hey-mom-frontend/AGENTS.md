@@ -1,8 +1,6 @@
 # Hey Mom Frontend
 
-Use the [frontend README](README.md) for setup. Run application browser
-checks through Traefik at `https://hey-mom.test/web/` so they exercise the
-actual base path and same-origin API routing.
+Use the [frontend README](README.md) for setup. For browser checks, use the Angular URL in the [development port table](../README.md#development-ports) to exercise the base path and same-origin API routing.
 
 ## Angular and state
 

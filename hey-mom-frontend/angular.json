@@ -57,7 +57,13 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/app/pages/login/login-credentials.ts",
+                  "with": "src/app/pages/login/login-credentials.development.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -74,11 +80,7 @@
           },
           "defaultConfiguration": "development",
           "options": {
-            "host": "0.0.0.0",
-            "port": 4200,
-            "allowedHosts": [
-              "hey-mom.test"
-            ]
+            "host": "0.0.0.0"
           }
         },
         "test": {

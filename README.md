@@ -15,7 +15,7 @@ corepack enable
 pnpm install --frozen-lockfile
 pnpm --dir hey-mom-frontend install --frozen-lockfile
 pnpm --dir hey-mom-website install --frozen-lockfile
-(cd hey-mom-backend && dotnet restore HeyMom.sln)
+(cd hey-mom-backend && dotnet tool restore && dotnet restore HeyMom.sln)
 ```
 
 Use the .NET SDK pinned in `hey-mom-backend/global.json`, Docker with Compose v2,
@@ -25,50 +25,54 @@ and mkcert. Add the following line to your local hosts file:
 127.0.0.1 hey-mom.test
 ```
 
-Create and trust a local TLS certificate:
+Trust the local mkcert CA once, then generate the certificate for the
+configured development domain:
 
 ```sh
 mkcert -install
-mkdir -p deployment/development/traefik/certs
-mkcert -cert-file deployment/development/traefik/certs/hey-mom.test.pem \
-  -key-file deployment/development/traefik/certs/hey-mom.test-key.pem hey-mom.test
+pnpm dev:cert
 ```
 
 Run `pnpm dev` to start all three projects and the Docker infrastructure.
-Traefik serves the Astro website at <https://hey-mom.test/> (port 4321),
-the Angular app at <https://hey-mom.test/web/> (port 4200), and
-the .NET API at <https://hey-mom.test/api/> (port 5080).
-Check PostgreSQL through <https://hey-mom.test/api/health>.
-The development OpenAPI document is at <https://hey-mom.test/api/openapi/v1.json>.
+Stop the hot-reload processes with Ctrl+C, then run `pnpm dev:stop` to stop
+the Docker services while keeping their volumes.
 
-| Local service | Port on the host |
-| --- | --- |
-| Traefik HTTP and HTTPS | 80 and 443 |
-| PostgreSQL | 5433 |
-| RustFS API and console | 9000 and 9001 |
-| Mailpit SMTP and web | 1025 and 8025 |
+### Development ports
 
-Open the [Mailpit inbox](http://localhost:8025/) to inspect local mail.
-Use `127.0.0.1:1025` as the SMTP server for processes on the host.
+The defaults in [`.env.example`](.env.example) allow the JBY development
+stack to run alongside Hey Mom.
 
-Hey Mom uses the JBY ports. Stop JBY before starting Hey Mom. Stop the
-hot-reload processes with Ctrl+C, then run `pnpm dev:stop` to stop Docker
-services while keeping their volumes.
+| Service | Host port | Browser URL or endpoint |
+| --- | ---: | --- |
+| Traefik HTTPS | 8443 | <https://hey-mom.test:8443/> |
+| Traefik HTTP redirect | 8088 | <http://hey-mom.test:8088/> |
+| Astro website | 14321 | <https://hey-mom.test:8443/> |
+| Angular app | 14200 | <https://hey-mom.test:8443/web/> |
+| .NET API | 15080 | [Health](https://hey-mom.test:8443/api/health) · [OpenAPI](https://hey-mom.test:8443/api/openapi/v1.json) |
+| PostgreSQL | 15433 | `127.0.0.1:15433` |
+| RustFS API | 19000 | <http://localhost:19000/> |
+| RustFS console | 19001 | <http://localhost:19001/> |
+| Mailpit SMTP | 11025 | `127.0.0.1:11025` |
+| Mailpit inbox | 18025 | <http://localhost:18025/> |
+
+Use the Traefik URLs for browser workflows. Email confirmation and password
+reset links use the same HTTPS origin.
 
 ## Account setup
+
+The [Authentication feature guide](hey-mom-backend/src/HeyMom.Api/Features/Authentication/README.md)
+describes sign-in, session restoration, account recovery, and ownership.
 
 On a fresh local database, start PostgreSQL and apply the Identity migration
 before running the registration flow:
 
 ```sh
 pnpm dev:services
-cd hey-mom-backend
-dotnet tool restore
-ASPNETCORE_ENVIRONMENT=Development dotnet ef database update \
-  --project src/HeyMom.Persistence --startup-project src/HeyMom.Api
+(cd hey-mom-backend && dotnet tool restore)
+pnpm dev:migrate
 ```
 
-The Astro homepage links to registration at <https://hey-mom.test/web/register>.
+The Astro homepage links to registration at <https://hey-mom.test:8443/web/register>.
 Check Mailpit for confirmation and password reset links.
 
 Outside development, set `Authentication__PublicOrigin` to the public HTTPS
@@ -83,6 +87,38 @@ directory when the host's default key ring is ephemeral. Instances serving
 the same deployment need a shared key ring. Apply migrations as a separate
 deployment step.
 
+## Using Hey Mom as a starter
+
+1. Copy the repository into a separate checkout and run `cp .env.example .env`
+   in the repository root. Set a unique `DEV_PROJECT_NAME`, a local
+   `DEV_DOMAIN` under `.test`, and free host ports for any projects that will
+   run alongside it. The project name scopes the Compose project, containers,
+   and data volumes.
+2. Set the local PostgreSQL database and user, RustFS credentials, and
+   `DEV_MAIL_FROM` in `.env`. The sample values are for development only.
+   PostgreSQL applies its initialization settings when its volume is first
+   created. Use a new project name for the starter's own data volumes.
+3. Map the chosen domain to `127.0.0.1` in your hosts file. Install the
+   dependencies from [Local development](#local-development) and run
+   `pnpm dev:cert`, `pnpm dev:services`, `pnpm dev:migrate`, then `pnpm dev`.
+   Use the HTTPS links printed by the startup script.
+4. Register and confirm an account through the app. If you want the local
+   login shortcut, register the account listed in `DEV_TEST_EMAIL` and
+   `DEV_TEST_PASSWORD`. Leave both values empty to hide the button.
+   Rename the app titles and package or namespace names for the new product
+   as needed.
+
+The dev commands read checked-in defaults from `.env.example`. A local
+`.env` overrides them, and exported `DEV_*` variables take precedence.
+Docker Compose receives the same values as the local .NET, Angular and
+Astro processes. The configured domain and HTTPS port determine the
+browser URLs, Traefik's redirect, account email links, and the OpenAPI
+URL. Internal container ports and the browser's relative `/api/` calls
+are fixed conventions.
+
+The local `.env` and TLS files are ignored by Git. Configure
+production settings and secrets in the deployment environment.
+
 ## Verify
 
 ```sh
@@ -90,7 +126,7 @@ deployment step.
 pnpm --dir hey-mom-frontend test --watch=false
 pnpm --dir hey-mom-frontend build
 pnpm --dir hey-mom-website build
-docker compose -f deployment/development/compose.yml config --quiet
+docker compose --env-file .env.example -f deployment/development/compose.yml config --quiet
 ```
 
 To also run the PostgreSQL authentication tests, set `HEYMOM_TEST_POSTGRES`

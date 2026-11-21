@@ -1,9 +1,10 @@
 import net from "node:net";
+import { dev } from "./dev-config.mjs";
 
 const developmentPorts = [
-  { port: 4200, process: "Angular" },
-  { port: 5080, process: ".NET API" },
-  { port: 4321, process: "Astro website" },
+  { port: Number(dev.DEV_ANGULAR_PORT), process: "Angular" },
+  { port: Number(dev.DEV_API_PORT), process: ".NET API" },
+  { port: Number(dev.DEV_ASTRO_PORT), process: "Astro website" },
 ];
 
 const occupied = (

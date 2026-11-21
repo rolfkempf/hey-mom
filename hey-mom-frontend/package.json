@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "api:types": "openapi-typescript https://hey-mom.test/api/openapi/v1.json -o src/app/infrastructure/api/openapi.ts",
+    "start": "node ../scripts/dev.mjs frontend",
+    "api:types": "node ../scripts/dev.mjs api-types",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"

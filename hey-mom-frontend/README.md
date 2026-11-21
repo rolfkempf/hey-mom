@@ -5,6 +5,8 @@ pins and the normal same-origin startup through Traefik.
 
 Use `pnpm start`, `pnpm test --watch=false`, and `pnpm build` from this
 directory. The frontend is served under `/web/`.
+`pnpm start` and `pnpm api:types` use the root development configuration
+documented in [Using Hey Mom as a starter](../README.md#using-hey-mom-as-a-starter).
 
 ## Application layout
 

@@ -1,49 +1,64 @@
 http:
   routers:
+    http-redirect:
+      rule: 'Host(`{{ env "DEV_DOMAIN" }}`)'
+      entryPoints:
+        - web
+      middlewares:
+        - https-redirect
+      service: noop@internal
+
     frontend:
-      rule: Host(`hey-mom.test`) && (Path(`/web`) || PathPrefix(`/web/`))
+      rule: 'Host(`{{ env "DEV_DOMAIN" }}`) && (Path(`/web`) || PathPrefix(`/web/`))'
       entryPoints:
         - websecure
       service: frontend
       tls: {}
 
     backend:
-      rule: Host(`hey-mom.test`) && (Path(`/api`) || PathPrefix(`/api/`))
+      rule: 'Host(`{{ env "DEV_DOMAIN" }}`) && (Path(`/api`) || PathPrefix(`/api/`))'
       entryPoints:
         - websecure
       service: backend
       tls: {}
 
     website:
-      rule: Host(`hey-mom.test`)
+      rule: 'Host(`{{ env "DEV_DOMAIN" }}`)'
       priority: 1
       entryPoints:
         - websecure
       service: website
       tls: {}
 
+  middlewares:
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        port: '{{ env "DEV_HTTPS_PORT" }}'
+        permanent: true
+
   services:
     website:
       loadBalancer:
         servers:
-          - url: http://host.docker.internal:4321
+          - url: 'http://host.docker.internal:{{ env "DEV_ASTRO_PORT" }}'
 
     frontend:
       loadBalancer:
         servers:
-          - url: http://host.docker.internal:4200
+          - url: 'http://host.docker.internal:{{ env "DEV_ANGULAR_PORT" }}'
 
     backend:
       loadBalancer:
         servers:
-          - url: http://host.docker.internal:5080
+          - url: 'http://host.docker.internal:{{ env "DEV_API_PORT" }}'
 
 tls:
   certificates:
-    - certFile: /etc/traefik/certs/hey-mom.test.pem
-      keyFile: /etc/traefik/certs/hey-mom.test-key.pem
+    - certFile: '/etc/traefik/certs/{{ env "DEV_DOMAIN" }}.pem'
+      keyFile: '/etc/traefik/certs/{{ env "DEV_DOMAIN" }}-key.pem'
   stores:
     default:
       defaultCertificate:
-        certFile: /etc/traefik/certs/hey-mom.test.pem
-        keyFile: /etc/traefik/certs/hey-mom.test-key.pem
+        certFile: '/etc/traefik/certs/{{ env "DEV_DOMAIN" }}.pem'
+        keyFile: '/etc/traefik/certs/{{ env "DEV_DOMAIN" }}-key.pem'

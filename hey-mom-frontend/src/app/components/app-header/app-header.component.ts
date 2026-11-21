@@ -12,7 +12,12 @@ import { HlmButton } from '@spartan-ng/helm/button';
         class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3"
         aria-label="Hauptnavigation"
       >
-        <a hlmBtn variant="outline" href="/">Website</a>
+        <div class="flex gap-2">
+          <a hlmBtn variant="outline" href="/">Website</a>
+          @if (auth.currentUser()) {
+            <a hlmBtn variant="outline" routerLink="/">App</a>
+          }
+        </div>
         <div class="flex gap-2">
           @if (auth.currentUser(); as user) {
             <a hlmBtn variant="outline" routerLink="/account">{{ user.email }}</a>

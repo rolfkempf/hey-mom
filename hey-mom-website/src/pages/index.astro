@@ -1,3 +1,7 @@
+---
+import '../styles/global.css';
+---
+
 <!doctype html>
 <html lang="de">
   <head>
@@ -5,11 +9,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Hey Mom</title>
   </head>
-  <body>
-    <main>
-      <h1>Hey Mom</h1>
-      <a href="/web/register">Konto erstellen</a>
-      <a href="/web/login">Anmelden</a>
+  <body class="min-h-screen bg-stone-100 font-sans text-stone-950 antialiased">
+    <header class="border-b border-stone-200">
+      <div class="mx-auto max-w-5xl px-6 py-5">
+        <a href="/" class="text-lg font-bold tracking-tight">Hey Mom</a>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-6 py-14 sm:py-24">
+      <section
+        aria-labelledby="login-heading"
+        class="mx-auto max-w-md rounded-3xl border border-stone-200 bg-white p-7 shadow-sm sm:p-10"
+      >
+        <h1 id="login-heading" class="text-3xl font-semibold tracking-tight">Willkommen bei Hey Mom</h1>
+        <a
+          href="/web/login"
+          class="mt-8 flex min-h-12 items-center justify-center rounded-xl bg-teal-800 px-5 py-3 font-semibold text-white transition-colors hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-800"
+        >
+          Anmelden
+        </a>
+        <p class="mt-5 text-center text-sm text-stone-600">
+          Neu hier?
+          <a
+            href="/web/register"
+            class="font-semibold text-teal-900 underline underline-offset-4 hover:text-teal-700"
+          >
+            Konto erstellen
+          </a>
+        </p>
+      </section>
     </main>
   </body>
 </html>

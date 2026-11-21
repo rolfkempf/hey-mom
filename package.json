@@ -8,12 +8,14 @@
   "scripts": {
     "dev": "node scripts/dev-port-check.mjs && pnpm dev:services && pnpm dev:wait:services && pnpm dev:apps",
     "dev:apps": "concurrently -n api,web,site,ready -c blue,green,yellow,magenta --kill-others-on-fail \"pnpm backend\" \"pnpm frontend\" \"pnpm website\" \"node scripts/dev-ready-banner.mjs\"",
-    "dev:services": "docker compose -f deployment/development/compose.yml up -d --wait --wait-timeout 120",
-    "dev:wait:services": "wait-on --timeout 120000 tcp:127.0.0.1:5433 tcp:127.0.0.1:9000",
-    "dev:stop": "docker compose -f deployment/development/compose.yml down",
-    "backend": "cd hey-mom-backend && dotnet watch --non-interactive --project src/HeyMom.Api/HeyMom.Api.csproj",
-    "frontend": "pnpm --dir hey-mom-frontend start",
-    "website": "pnpm --dir hey-mom-website dev"
+    "dev:services": "node scripts/dev.mjs services",
+    "dev:wait:services": "node scripts/dev.mjs wait-services",
+    "dev:stop": "node scripts/dev.mjs stop",
+    "backend": "node scripts/dev.mjs backend",
+    "frontend": "node scripts/dev.mjs frontend",
+    "website": "node scripts/dev.mjs website",
+    "dev:cert": "node scripts/dev.mjs cert",
+    "dev:migrate": "node scripts/dev.mjs migrate"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

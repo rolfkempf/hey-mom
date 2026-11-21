@@ -48,6 +48,7 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
+    canActivate: [authGuard],
     loadComponent: () => import('@app/pages/home/home.page').then(({ HomePage }) => HomePage),
   },
 ];

@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { AuthService, authErrorMessage } from '@app/services/auth.service';
+import { developmentLogin } from './login-credentials';
 
 @Component({
   selector: 'app-login-page',
@@ -16,6 +17,18 @@ import { AuthService, authErrorMessage } from '@app/services/auth.service';
         <p class="mt-2 text-muted-foreground">Melde dich bei Hey Mom an.</p>
       </div>
       <form class="space-y-4" (ngSubmit)="submit()">
+        @if (developmentLogin) {
+          <button
+            hlmBtn
+            type="button"
+            variant="outline"
+            class="w-full"
+            [disabled]="busy()"
+            (click)="fillTestCredentials()"
+          >
+            Test-Zugangsdaten eintragen
+          </button>
+        }
         <label class="block space-y-1"
           >E-Mail-Adresse<input
             class="w-full rounded-md border px-3 py-2"
@@ -37,7 +50,7 @@ import { AuthService, authErrorMessage } from '@app/services/auth.service';
         @if (message()) {
           <p role="alert" class="text-destructive">{{ message() }}</p>
         }
-        <button hlmBtn class="w-full" [disabled]="busy()">
+        <button hlmBtn type="submit" class="w-full" [disabled]="busy()">
           {{ busy() ? 'Anmeldung läuft …' : 'Anmelden' }}
         </button>
       </form>
@@ -52,16 +65,26 @@ import { AuthService, authErrorMessage } from '@app/services/auth.service';
 export class LoginPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  readonly developmentLogin = developmentLogin;
   email = '';
   password = '';
   readonly busy = signal(false);
   readonly message = signal('');
+
+  fillTestCredentials(): void {
+    if (this.developmentLogin) {
+      this.email = this.developmentLogin.email;
+      this.password = this.developmentLogin.password;
+      this.message.set('');
+    }
+  }
+
   async submit(): Promise<void> {
     this.busy.set(true);
     this.message.set('');
     try {
       await this.auth.login({ email: this.email, password: this.password });
-      await this.router.navigateByUrl('/account');
+      await this.router.navigateByUrl('/', { replaceUrl: true });
     } catch (error) {
       this.message.set(
         error instanceof HttpErrorResponse && error.status === 401
