@@ -1,0 +1,75 @@
+name: hey-mom-development
+
+services:
+  traefik:
+    image: traefik:v3.5.4@sha256:4df0a50fcf71b454c0d7ad17675776dc8d37359deae3291895bdaa008c1b9972
+    container_name: hey-mom-development-traefik
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:443:443"
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./traefik/certs:/etc/traefik/certs:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres:
+    image: postgres:16.14-alpine3.23@sha256:aed434cd14d474ee8afb77785c752ce692fee2b35541778a4d5323cf1fc7dcde
+    container_name: hey-mom-development-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hey_mom
+      POSTGRES_USER: hey_mom
+      POSTGRES_PASSWORD: hey-mom-development-only
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hey_mom -d hey_mom"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  object-storage:
+    image: rustfs/rustfs:1.0.0-beta.8@sha256:fa19210ac4697c79d7ccca1ec9b0eb91aebacc6691991ffb14014bb3c67e6cc3
+    container_name: hey-mom-development-object-storage
+    restart: unless-stopped
+    environment:
+      RUSTFS_ACCESS_KEY: hey-mom
+      RUSTFS_SECRET_KEY: hey-mom-development-only
+      RUSTFS_CONSOLE_ENABLE: "true"
+    command:
+      - --console-enable
+      - /data
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - object_storage_data:/data
+
+  mailpit:
+    image: axllent/mailpit:v1.30.2@sha256:37a38e48e9338cd7e89dfeb487f37b02ebfcd9cb23111bed2d345e79d37d6dd6
+    container_name: hey-mom-development-mailpit
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+    name: hey-mom-development-postgres
+  object_storage_data:
+    name: hey-mom-development-object-storage

@@ -1,0 +1,22 @@
+{
+  "name": "hey-mom-apps",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=22.22.3 <23"
+  },
+  "scripts": {
+    "dev": "node scripts/dev-port-check.mjs && pnpm dev:services && pnpm dev:wait:services && pnpm dev:apps",
+    "dev:apps": "concurrently -n api,web,site,ready -c blue,green,yellow,magenta --kill-others-on-fail \"pnpm backend\" \"pnpm frontend\" \"pnpm website\" \"node scripts/dev-ready-banner.mjs\"",
+    "dev:services": "docker compose -f deployment/development/compose.yml up -d --wait --wait-timeout 120",
+    "dev:wait:services": "wait-on --timeout 120000 tcp:127.0.0.1:5433 tcp:127.0.0.1:9000",
+    "dev:stop": "docker compose -f deployment/development/compose.yml down",
+    "backend": "cd hey-mom-backend && dotnet watch --non-interactive --project src/HeyMom.Api/HeyMom.Api.csproj",
+    "frontend": "pnpm --dir hey-mom-frontend start",
+    "website": "pnpm --dir hey-mom-website dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "wait-on": "^8.0.4"
+  }
+}

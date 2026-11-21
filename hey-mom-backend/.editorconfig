@@ -1,0 +1,3 @@
+[*.cs]
+# Unnecessary using directives fail the build (IDE0005 needs GenerateDocumentationFile).
+dotnet_diagnostic.IDE0005.severity = warning

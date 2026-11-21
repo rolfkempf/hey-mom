@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-quality:
+    name: Backend quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18.3-alpine
+        env:
+          POSTGRES_USER: hey_mom_test
+          POSTGRES_PASSWORD: hey-mom-test-only
+          POSTGRES_DB: hey_mom_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+      HEYMOM_TEST_POSTGRES: Host=localhost;Port=5432;Database=hey_mom_test;Username=hey_mom_test;Password=hey-mom-test-only
+    defaults:
+      run:
+        working-directory: hey-mom-backend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: hey-mom-backend/global.json
+
+      - name: Restore
+        run: dotnet restore HeyMom.sln
+
+      - name: Build
+        run: dotnet build HeyMom.sln --no-restore
+
+      - name: Test
+        timeout-minutes: 20
+        run: >-
+          dotnet test HeyMom.sln --no-build --no-restore
+          --blame-hang-timeout 5m --blame-hang-dump-type none
+          --logger "trx;LogFilePrefix=backend"
+          --results-directory TestResults
+
+      - name: Upload test diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: backend-test-diagnostics
+          path: |
+            hey-mom-backend/TestResults/**/*.trx
+            hey-mom-backend/TestResults/**/*_Sequence.xml
+          if-no-files-found: warn
+          retention-days: 7
+
+  frontend-quality:
+    name: Angular quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 11.9.0
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: hey-mom-frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm --dir hey-mom-frontend install --frozen-lockfile
+
+      - name: Test Angular
+        run: pnpm --dir hey-mom-frontend test --watch=false
+
+      - name: Build Angular
+        run: pnpm --dir hey-mom-frontend build
+
+  website-quality:
+    name: Astro quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 11.9.0
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: hey-mom-website/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm --dir hey-mom-website install --frozen-lockfile
+
+      - name: Check and build Astro
+        run: pnpm --dir hey-mom-website build
+
+  docker:
+    name: Development Compose
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate development Compose
+        run: docker compose -f deployment/development/compose.yml config --quiet

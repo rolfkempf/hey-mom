@@ -1,0 +1,49 @@
+http:
+  routers:
+    frontend:
+      rule: Host(`hey-mom.test`) && (Path(`/web`) || PathPrefix(`/web/`))
+      entryPoints:
+        - websecure
+      service: frontend
+      tls: {}
+
+    backend:
+      rule: Host(`hey-mom.test`) && (Path(`/api`) || PathPrefix(`/api/`))
+      entryPoints:
+        - websecure
+      service: backend
+      tls: {}
+
+    website:
+      rule: Host(`hey-mom.test`)
+      priority: 1
+      entryPoints:
+        - websecure
+      service: website
+      tls: {}
+
+  services:
+    website:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:4321
+
+    frontend:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:4200
+
+    backend:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:5080
+
+tls:
+  certificates:
+    - certFile: /etc/traefik/certs/hey-mom.test.pem
+      keyFile: /etc/traefik/certs/hey-mom.test-key.pem
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /etc/traefik/certs/hey-mom.test.pem
+        keyFile: /etc/traefik/certs/hey-mom.test-key.pem
