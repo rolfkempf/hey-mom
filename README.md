@@ -55,6 +55,34 @@ Hey Mom uses the JBY ports. Stop JBY before starting Hey Mom. Stop the
 hot-reload processes with Ctrl+C, then run `pnpm dev:stop` to stop Docker
 services while keeping their volumes.
 
+## Account setup
+
+On a fresh local database, start PostgreSQL and apply the Identity migration
+before running the registration flow:
+
+```sh
+pnpm dev:services
+cd hey-mom-backend
+dotnet tool restore
+ASPNETCORE_ENVIRONMENT=Development dotnet ef database update \
+  --project src/HeyMom.Persistence --startup-project src/HeyMom.Api
+```
+
+The Astro homepage links to registration at <https://hey-mom.test/web/register>.
+Check Mailpit for confirmation and password reset links.
+
+Outside development, set `Authentication__PublicOrigin` to the public HTTPS
+origin and configure an SMTP relay through `Authentication__Smtp__Host`,
+`Authentication__Smtp__Port`, `Authentication__Smtp__FromAddress`,
+`Authentication__Smtp__UserName` and `Authentication__Smtp__Password`. STARTTLS is enabled by default. Put SMTP
+credentials in the environment or secret store. For a deployment behind a
+proxy, set `Authentication__TrustedProxy` to the proxy's direct IP address,
+so ASP.NET Core can use trusted HTTPS and client-IP forwarding. Set
+`Authentication__DataProtectionKeyPath` to a persistent, access-restricted
+directory when the host's default key ring is ephemeral. Instances serving
+the same deployment need a shared key ring. Apply migrations as a separate
+deployment step.
+
 ## Verify
 
 ```sh
@@ -64,6 +92,12 @@ pnpm --dir hey-mom-frontend build
 pnpm --dir hey-mom-website build
 docker compose -f deployment/development/compose.yml config --quiet
 ```
+
+To also run the PostgreSQL authentication tests, set `HEYMOM_TEST_POSTGRES`
+to a connection string for a local test PostgreSQL server. The test role
+needs permission to create databases. The fixture applies migrations to its
+own temporary database and drops it after the run. CI provides its own
+PostgreSQL service.
 
 [Health](hey-mom-backend/src/HeyMom.Api/Features/Health/README.md) is the first
 vertical slice. Its endpoints own HTTP mapping. The query and response DTO live

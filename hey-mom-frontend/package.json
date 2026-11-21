@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "api:types": "openapi-typescript https://hey-mom.test/api/openapi/v1.json -o src/app/infrastructure/api/openapi.ts",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
@@ -31,6 +32,7 @@
     "@angular/compiler-cli": "^22.3.0",
     "@tailwindcss/postcss": "4.3.5",
     "jsdom": "^31.0.0",
+    "openapi-typescript": "^7.13.0",
     "postcss": "^8.5.33",
     "prettier": "^3.8.1",
     "tailwindcss": "4.3.5",

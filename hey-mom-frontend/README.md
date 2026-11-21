@@ -15,6 +15,19 @@ The Angular CLI generates this layout by default. For example, use
 
 See the [frontend guide](AGENTS.md) for role folders.
 
+## API contract
+
+With the API running through Traefik, regenerate the TypeScript contract after
+an API change:
+
+```sh
+NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem" pnpm api:types
+```
+
+The command reads the development OpenAPI document and writes
+`src/app/infrastructure/api/openapi.ts`. Commit the updated contract with the
+API change.
+
 ## Spartan UI
 
 Spartan Brain supplies the Angular behavior. The local Helm primitives live in

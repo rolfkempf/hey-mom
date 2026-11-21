@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { AppHeaderComponent } from '@app/components/app-header/app-header.component';
+import { AuthService } from '@app/services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -12,4 +13,9 @@ import { AppHeaderComponent } from '@app/components/app-header/app-header.compon
     </main>
   `,
 })
-export class AppShellComponent {}
+export class AppShellComponent {
+  constructor() {
+    void this.auth.restoreSession();
+  }
+  private readonly auth = inject(AuthService);
+}

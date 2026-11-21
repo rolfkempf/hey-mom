@@ -4,6 +4,10 @@
     <UserSecretsId>hey-mom-api-development</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="MailKit" />
+    <!-- MimeKit resolves a vulnerable lower bound without this fixed minimum. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.OpenApi" />
     <ProjectReference Include="../HeyMom.Persistence/HeyMom.Persistence.csproj" />
