@@ -5,17 +5,13 @@ namespace HeyMom.Api.Features.Health;
 
 internal static class HealthEndpoints
 {
-    public static RouteGroupBuilder MapEndpoints(RouteGroupBuilder endpoints)
+    public static void MapHealthEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        endpoints
-            .MapGet("/health", GetHealthAsync)
+        endpoints.MapGet("/health", GetHealthAsync)
             .WithName("GetHealth")
             .WithSummary("Checks whether the API and PostgreSQL are available.")
             .WithTags("System")
-            .Produces<GetHealthResponseDto>()
             .Produces(StatusCodes.Status503ServiceUnavailable);
-
-        return endpoints;
     }
 
     private static async Task<Results<Ok<GetHealthResponseDto>, StatusCodeHttpResult>> GetHealthAsync(

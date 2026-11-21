@@ -4,9 +4,6 @@ namespace HeyMom.Api.Features.Health;
 
 internal static class HealthServiceCollectionExtensions
 {
-    public static IServiceCollection AddHealthFeature(this IServiceCollection services)
-    {
+    public static IServiceCollection AddHealthFeature(this IServiceCollection services) =>
         services.AddScoped<GetHealthQuery>();
-        return services;
-    }
 }

@@ -26,8 +26,10 @@ internal static class AuthenticationServiceCollectionExtensions
     internal const string AccountRateLimit = "auth-account";
     internal const string MailRateLimit = "auth-mail";
 
-    public static void AddAuthenticationFeature(
-        this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
+    public static IServiceCollection AddAuthenticationFeature(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IWebHostEnvironment environment)
     {
         var section = configuration.GetSection("Authentication");
         services.AddOptions<AuthenticationOptions>()
@@ -124,6 +126,7 @@ internal static class AuthenticationServiceCollectionExtensions
         services.AddScoped<ChangePasswordCommand>();
         services.AddScoped<RequestEmailChangeCommand>();
         services.AddScoped<ConfirmEmailChangeCommand>();
+        return services;
     }
 
     private static void AddLimit(RateLimiterOptions options, string policyName, int permitLimit)
